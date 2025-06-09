@@ -157,17 +157,14 @@ func (m MMap) unmap() error {
 	defer mappingsMu.Unlock()
 
 	ptr := uintptr(unsafe.Pointer(&m[0]))
-	mapping, ok := mappings[ptr]
+	_, ok := mappings[ptr]
 	if !ok {
 		return errors.New("mapping not found")
 	}
 
-	// Close the file if it exists
-	if mapping.file != nil {
-		if err := mapping.file.Close(); err != nil {
-			return err
-		}
-	}
+	// Don't close the file here - the caller is responsible for closing it
+	// This matches the behavior of the native mmap implementation where
+	// unmapping doesn't close the underlying file descriptor
 
 	// Remove from mappings
 	delete(mappings, ptr)
